@@ -1,0 +1,22 @@
+.AuthForm {
+    background-color: #282c34;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    font-size: calc(10px + 2vmin);
+    color: white;
+    margin: 3vh;
+    padding: 3vh;
+}
+
+.custom-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.email-form input {
+    margin: 1vh;
+}

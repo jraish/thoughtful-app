@@ -1,0 +1,32 @@
+.AuthSuccess {
+    background-color: #282c34;
+    align-items: center;
+    height: 100%;
+}
+
+.results {
+    color: white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.intro {
+    padding: 1vh;
+}
+
+.repos {
+    padding: 1vh;
+    width: 100%;
+    overflow: scroll;
+}
+
+.repo {
+    font-size: 1vh;
+    color: white;    
+}
+
+.repo a {
+    font-size: 2vh;
+    color: aliceblue;
+}
