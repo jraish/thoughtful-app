@@ -31,3 +31,7 @@
     font-size: 2vh;
     color: aliceblue;
 }
+
+.button-container {
+    align-items: center;
+}

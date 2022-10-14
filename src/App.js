@@ -16,8 +16,8 @@ function App() {
               Welcome to the Thoughtful coding challenge app!
             </h1>
           </header>
-          {authed ? <AuthSuccess /> : <AuthForm verify={() => setAuthed(true)}/>}
-        </div>
+          {authed ? <AuthSuccess togglePage={() => setAuthed(!authed)} /> : <AuthForm togglePage={() => setAuthed(!authed)}/>}
+          </div>
         <ToastContainer />
     </div>
   );

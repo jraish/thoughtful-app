@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './AuthSuccess.css';
 
-const AuthSuccess = () => {
+const AuthSuccess = (props) => {
+    const { togglePage } = props;
     const [repos, setRepos] = useState(null)
 
     const Repo = (props) => {
@@ -37,6 +38,9 @@ const AuthSuccess = () => {
 
     return (
         <div className='results'>
+            <div className='button-container'>
+                <button onClick={togglePage}>Click here to go back</button>
+            </div>
             <div className='intro'>
                 <h2>Here are a few things I've been working on!</h2>
                 <p>(Not all of these are finished! Not all of them even make sense.</p>

@@ -4,7 +4,7 @@ import axios from 'axios'
 import './AuthForm.css';
 
 const AuthForm = (props) => {
-    const { verify } = props;
+    const { togglePage } = props;
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showEmailForm, setShowEmailForm] = useState(true)
@@ -40,7 +40,7 @@ const AuthForm = (props) => {
             .then((response) => {
                 const { data } = response;
                 if (data.message == 'Validated') {
-                    verify()
+                    togglePage()
                 } else {
                     notify({ message: `Error validating your password! ${err}`, error: true })
                     console.log(err)
