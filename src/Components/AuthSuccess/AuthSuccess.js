@@ -12,7 +12,7 @@ const AuthSuccess = () => {
                 <a href={repo.url} >
                     <h3>{repo.name}</h3>
                 </a>
-                <p>{repo.language}</p>
+                <p>Primary language: {repo.language}</p>
             </div>
         )
     }

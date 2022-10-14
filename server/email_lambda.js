@@ -22,6 +22,7 @@ async function sendEmail(otp, toAddress) {
         <body>
           <p>Use this code to verify your login at Josh's magical mystery Thoughtful application app</p>
           <p><h1>` + otp + `</h1></p>
+          <p>Code will expire in 15 minutes!!</p>
         </body>
       </html>`;
 

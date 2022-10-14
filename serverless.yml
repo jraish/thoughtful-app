@@ -20,15 +20,12 @@ provider:
       statements: 
         - Effect: Allow
           Action: 
-            - dynamodb:DescribeTable
             - dynamodb:Query
-            - dynamodb:Scan
-            - dynamodb:GetItem
             - dynamodb:PutItem
-            - dynamodb:UpdateItem
-            - dynamodb:DeleteItem
+            - dynamodb:ListStreams
+            - dynamodb:GetRecords
           Resource: 
-            - "Fn::GetAtt": [DynamodbTable, Arn]
+            - "Fn::Join": ["", ["arn:aws:dynamodb:" , {"Ref": "AWS::Region"}, ":", {"Ref": "AWS::AccountId"} , ":table/${self:provider.environment.TABLE_NAME}"] ]
         - Effect: Allow
           Action: 
             - SES:SendEmail
@@ -57,6 +54,7 @@ provider:
           - Ref: AWS::Region
           - .amazonaws.com/
           - ${self:provider.stage}
+    TABLE_NAME: password_table
 
 plugins:
   - serverless-webpack
@@ -67,7 +65,7 @@ plugins:
 
 functions:
   serve:
-    handler: handler.serve
+    handler: server/handler.serve
     events:
       - http:
           path: /
@@ -79,7 +77,7 @@ functions:
           cors: true
 
   generate_password:
-    handler: password_lambda.generate_password
+    handler: server/password_lambda.generate_password
     events:
       - http:
           path: /otp/generate_password
@@ -91,75 +89,30 @@ functions:
       OTP_EXPIRY_MINUTES: 15      
 
   send_email:
-    handler: email_lambda.send_email
+    handler: server/email_lambda.send_email
+    dependsOn: DynamodbTable
     events:
       - stream:
           type: dynamodb
-          arn:
+          arn: 
             Fn::GetAtt: [DynamodbTable, StreamArn]
+          filterPatterns:
+            - eventName: [INSERT]
           batchSize: 100
-          startingPosition: TRIM_HORIZON
+          startingPosition: LATEST
+          maximumRetryAttempts: 5
     environment:
       FROM_ADDRESS: ${env:FROM_EMAIL}
 
-     # SendEmailFunction:
-    #   Type: AWS::Serverless::Function
-    #   Properties:
-    #     # CodeUri: send-email/
-    #     Handler: email_lambda.lambdaHandler
-    #     Runtime: nodejs14.x
-    #     Environment:
-    #       Variables:
-    #         FROM_ADDRESS: $FROM_EMAIL
-    #     Policies:
-    #       - Statement:
-    #         - Sid: SendEmailPermission
-    #           Effect: Allow
-    #           Action:
-    #             - SES:SendEmail
-    #           Resource: '*'
-    #           Condition:
-    #             StringEquals:
-    #               ses:FromAddress:
-    #                 - $FROM_EMAIL
-    #     Events:
-    #       DynamodbTableStream:
-    #         Type: DynamoDB
-    #         Properties:
-    #           Stream: !GetAtt DynamodbTable.StreamArn
-    #           StartingPosition: TRIM_HORIZON
-    #           BatchSize: 100
-
-    # VerifyOtpFunction:
-    #   Type: AWS::Serverless::Function
-    #   Properties:
-    #     # CodeUri: verify-otp/
-    #     Handler: verify_lambda.lambdaHandler
-    #     Runtime: nodejs14.x
-    #     Environment:
-    #       Variables:
-    #         DB_TABLE: !Ref DynamodbTable
-    #     Policies:
-    #       - Statement:
-    #         - Sid: SendEmailPermission
-    #           Effect: Allow
-    #           Action:
-    #             - SES:SendEmail
-    #           Resource: '*'
-    #           Condition:
-    #             StringEquals:
-    #               ses:FromAddress:
-    #                 - $FROM_EMAIL
-    #       - DynamoDBReadPolicy:
-    #           TableName: !Ref DynamodbTable
-    #     Events:
-    #       GenerateUrlApi:
-    #         Type: Api
-    #         Properties:
-    #           Path: /otp/verify
-    #           Method: post
-    #           RestApiId:
-    #             Ref: ApiGatewayRestApi
+  verify_password:
+    handler: server/verify_lambda.verify_password
+    events:
+      - http:
+          path: /otp/verify
+          method: post
+          cors: true
+    environment:
+      DB_TABLE: !Ref DynamodbTable
 
 custom:
   distBucketUrl:
@@ -228,91 +181,12 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.TABLE_NAME}
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         TimeToLiveSpecification:
             AttributeName: expiryAt
             Enabled: True
-
-    # GenerateOtpFunction:
-    #   Type: AWS::Serverless::Function
-    #   Properties:
-    #     # CodeUri: /
-    #     Handler: password_lambda.lambdaHandler
-    #     Runtime: nodejs14.x
-    #     Environment:
-    #       Variables:
-    #         DB_TABLE: !Ref DynamodbTable
-    #     Policies:
-    #       - DynamoDBWritePolicy:
-    #           TableName: !Ref DynamodbTable
-    #     Events:
-    #       GenerateUrlApi:
-    #         Type: Api
-    #         Properties:
-    #           Path: /otp/generate_password
-    #           Method: post
-    #           RestApiId:
-    #             Ref: ApiGatewayApi
-
-    # VerifyOtpFunction:
-    #   Type: AWS::Serverless::Function
-    #   Properties:
-    #     # CodeUri: verify-otp/
-    #     Handler: verify_lambda.lambdaHandler
-    #     Runtime: nodejs14.x
-    #     Environment:
-    #       Variables:
-    #         DB_TABLE: !Ref DynamodbTable
-    #     Policies:
-    #       - Statement:
-    #         - Sid: SendEmailPermission
-    #           Effect: Allow
-    #           Action:
-    #             - SES:SendEmail
-    #           Resource: '*'
-    #           Condition:
-    #             StringEquals:
-    #               ses:FromAddress:
-    #                 - $FROM_EMAIL
-    #       - DynamoDBReadPolicy:
-    #           TableName: !Ref DynamodbTable
-    #     Events:
-    #       GenerateUrlApi:
-    #         Type: Api
-    #         Properties:
-    #           Path: /otp/verify
-    #           Method: post
-    #           RestApiId:
-    #             Ref: ApiGatewayRestApi
-
-    # SendEmailFunction:
-    #   Type: AWS::Serverless::Function
-    #   Properties:
-    #     # CodeUri: send-email/
-    #     Handler: email_lambda.lambdaHandler
-    #     Runtime: nodejs14.x
-    #     Environment:
-    #       Variables:
-    #         FROM_ADDRESS: $FROM_EMAIL
-    #     Policies:
-    #       - Statement:
-    #         - Sid: SendEmailPermission
-    #           Effect: Allow
-    #           Action:
-    #             - SES:SendEmail
-    #           Resource: '*'
-    #           Condition:
-    #             StringEquals:
-    #               ses:FromAddress:
-    #                 - $FROM_EMAIL
-    #     Events:
-    #       DynamodbTableStream:
-    #         Type: DynamoDB
-    #         Properties:
-    #           Stream: !GetAtt DynamodbTable.StreamArn
-    #           StartingPosition: TRIM_HORIZON
-    #           BatchSize: 100
 
     DistBucket:
       Type: AWS::S3::Bucket

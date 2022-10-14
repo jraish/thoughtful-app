@@ -3,7 +3,7 @@ var docClient = new AWS.DynamoDB.DocumentClient();
 
 let response;
 
-exports.lambdaHandler = async (event, context) => {
+export const verify_password = async (event, context) => {
   let Body = JSON.parse(event.body);
 
   if (!Body.sessionId || !Body.token) {

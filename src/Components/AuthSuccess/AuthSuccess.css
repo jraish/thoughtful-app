@@ -18,12 +18,13 @@
 .repos {
     padding: 1vh;
     width: 100%;
+    height: 50%;
     overflow: scroll;
 }
 
 .repo {
     font-size: 1vh;
-    color: white;    
+    color: white;
 }
 
 .repo a {
